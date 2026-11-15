@@ -651,6 +651,60 @@ class LocalJobsApp {
         document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
       });
     });
+
+    // Close modal on clicking overlay background
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+        }
+      });
+    });
+
+    // PWA Installation & Add to Home Screen
+    this.deferredPrompt = null;
+    const pwaBanner = document.getElementById('pwa-install-banner');
+    const isBannerDismissed = localStorage.getItem('PWA_BANNER_DISMISSED') === 'true';
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      if (!isBannerDismissed && pwaBanner) {
+        pwaBanner.style.display = 'flex';
+      }
+    });
+
+    // On mobile web browser (not already installed as standalone PWA), show install banner
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isStandalone && isMobile && !isBannerDismissed && pwaBanner) {
+      pwaBanner.style.display = 'flex';
+    }
+
+    const triggerInstall = async () => {
+      if (this.deferredPrompt) {
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          this.showToast('Installing LocalJobs to your home screen...', 'success');
+          if (pwaBanner) pwaBanner.style.display = 'none';
+        }
+        this.deferredPrompt = null;
+      } else {
+        // Show iOS / manual browser installation guide
+        const guideModal = document.getElementById('install-guide-modal');
+        if (guideModal) guideModal.classList.add('active');
+      }
+    };
+
+    document.getElementById('btn-pwa-install-banner')?.addEventListener('click', triggerInstall);
+    document.getElementById('btn-header-install')?.addEventListener('click', triggerInstall);
+    document.getElementById('btn-mobile-install')?.addEventListener('click', triggerInstall);
+
+    document.getElementById('btn-pwa-dismiss')?.addEventListener('click', () => {
+      if (pwaBanner) pwaBanner.style.display = 'none';
+      localStorage.setItem('PWA_BANNER_DISMISSED', 'true');
+    });
   }
 
   // Switch between Find Jobs, Post a Job, Admin Review, and Saved Jobs
@@ -1631,3 +1685,12 @@ let app;
 document.addEventListener('DOMContentLoaded', () => {
   app = new LocalJobsApp();
 });
+
+// Register Service Worker for PWA (Offline & Add to Home Screen)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('LocalJobs Service Worker Active', reg.scope))
+      .catch((err) => console.log('Service Worker registration skipped', err));
+  });
+}

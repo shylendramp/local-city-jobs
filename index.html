@@ -2,14 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <title>LocalJobs - City Jobs & Local Business Portal</title>
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1D4ED8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="LocalJobs">
+  <meta name="application-name" content="LocalJobs">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- App Icons -->
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+  <!-- PWA Install Banner (Mobile & Desktop) -->
+  <div id="pwa-install-banner" class="pwa-install-banner" style="display:none;">
+    <div class="pwa-banner-left">
+      <div class="pwa-app-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div class="pwa-banner-text">
+        <h4>Save as App on Phone</h4>
+        <p>Get one-tap access from your phone home screen icon</p>
+      </div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button id="btn-pwa-install-banner" class="btn-pwa-install">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Save Icon
+      </button>
+      <button id="btn-pwa-dismiss" class="btn-pwa-dismiss" title="Dismiss">&times;</button>
+    </div>
+  </div>
 
   <!-- Top Navigation Header -->
   <header class="app-header">
@@ -38,6 +76,10 @@
           Admin review
           <span class="nav-badge alert admin-pending-badge" style="display:none;">2</span>
         </button>
+        <button class="header-install-btn" id="btn-header-install" title="Save app to home screen">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Save App Icon
+        </button>
         <button class="header-post-btn" data-view-target="post-job">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Post a job
@@ -57,7 +99,7 @@
         <!-- Injected dynamically by app.js -->
       </div>
 
-      <!-- Search & Filters -->
+      <!-- Search & Filters Section -->
       <div class="search-filter-section">
         <div class="search-main-row">
           <div class="search-input-wrap">
@@ -76,7 +118,7 @@
 
         <!-- Local Business Categories Horizontal Pills -->
         <div class="category-pills-wrap" id="category-pills-container">
-          <!-- Injected by app.js: Schools, Colleges, Hospitals, Hotels, Shops, Showroom, Lawyer, Auditor, Clubs -->
+          <!-- Injected by app.js: Schools, Colleges, Hospitals, Hotels, Shops, Showrooms, Lawyers, Auditors, Clubs -->
         </div>
 
         <!-- Secondary Filter Tags -->
@@ -102,7 +144,7 @@
       <div class="post-job-container">
         <div class="section-header">
           <h2>Post a job in your city</h2>
-          <p>Support your local team: Hire verified local talent for your school, college, clinic, shop, showroom, legal or accounting practice.</p>
+          <p>Hire verified local talent for your school, college, clinic, shop, showroom, legal or accounting practice.</p>
         </div>
 
         <div class="form-card">
@@ -186,7 +228,7 @@
 
             <div class="form-group">
               <label for="post-skills" class="form-label">
-                Skills needed <span class="help-text">(comma separated tags used for instant candidate matching)</span>
+                Skills needed <span class="help-text">(comma separated tags used for candidate matching)</span>
               </label>
               <input type="text" id="post-skills" class="form-input" placeholder="e.g. billing, tally, customer service" value="billing, tally, customer service" required>
             </div>
@@ -196,12 +238,12 @@
               <textarea id="post-desc" class="form-textarea" rows="3">Handle counter billing and customer queries.</textarea>
             </div>
 
-            <div class="form-group" style="background:#F8FAFC; padding:12px; border-radius:10px; border:1px solid var(--border-light);">
-              <label style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px; cursor:pointer;">
-                <input type="checkbox" id="post-is-walkin" checked style="width:18px; height:18px; accent-color:var(--primary);">
+            <div class="form-group" style="background:#F8FAFC; padding:14px; border-radius:12px; border:1.5px solid var(--border-light);">
+              <label style="display:flex; align-items:center; gap:10px; font-weight:600; font-size:14px; cursor:pointer;">
+                <input type="checkbox" id="post-is-walkin" checked style="width:20px; height:20px; accent-color:var(--primary); cursor:pointer;">
                 Enable Walk-in Interview for this position
               </label>
-              <input type="text" id="post-walkin-info" class="form-input" style="margin-top:8px;" placeholder="Walk-in timings e.g. Mon-Sat 10:30 AM to 5:00 PM at 1st Floor Admin Office" value="Mon-Sat 10:30 AM to 5:00 PM at Showroom Counter">
+              <input type="text" id="post-walkin-info" class="form-input" style="margin-top:10px;" placeholder="Walk-in timings e.g. Mon-Sat 10:30 AM to 5:00 PM at Showroom Counter" value="Mon-Sat 10:30 AM to 5:00 PM at Showroom Counter">
             </div>
 
             <div class="form-group">
@@ -242,7 +284,7 @@
             </div>
 
             <button type="submit" class="submit-job-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Submit for review
             </button>
             <div style="font-size:12px; color:var(--text-light); text-align:center; margin-top:8px;">
@@ -319,31 +361,36 @@
 
   </main>
 
-  <!-- Mobile Bottom Navigation Bar -->
+  <!-- Mobile Bottom Navigation Bar (Docked at Bottom of Screen) -->
   <nav class="mobile-bottom-nav">
     <button class="mobile-nav-item active" data-view-target="find-jobs">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span>Find</span>
     </button>
     <button class="mobile-nav-item" data-view-target="post-job">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span>Post</span>
     </button>
     <button class="mobile-nav-item" data-view-target="saved-jobs">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
       <span>Saved</span>
       <span class="mobile-badge saved-count-badge" style="display:none;">0</span>
     </button>
     <button class="mobile-nav-item" data-view-target="admin-review">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span>Admin</span>
-      <span class="mobile-badge admin-pending-badge" style="display:none;">2</span>
+      <span class="mobile-badge alert admin-pending-badge" style="display:none;">2</span>
+    </button>
+    <button class="mobile-nav-item" id="btn-mobile-install">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Install</span>
     </button>
   </nav>
 
   <!-- MODAL: Job Details -->
   <div id="job-details-modal" class="modal-overlay">
     <div class="modal-dialog">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <h3>Job Details</h3>
         <button class="modal-close-btn" data-close-modal>&times;</button>
@@ -361,13 +408,14 @@
   <!-- MODAL: Apply for Job -->
   <div id="apply-modal" class="modal-overlay">
     <div class="modal-dialog">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <h3>Submit Job Application</h3>
         <button class="modal-close-btn" data-close-modal>&times;</button>
       </div>
       <form id="job-application-form">
         <div class="modal-body">
-          <div style="background:#F1F5F9; padding:12px; border-radius:10px; margin-bottom:14px;">
+          <div style="background:#F1F5F9; padding:12px 14px; border-radius:12px; margin-bottom:16px;">
             <div style="font-size:12px; color:var(--text-light);">Applying for:</div>
             <div id="apply-job-title" style="font-weight:700; font-size:16px; color:var(--text-main);">Billing Executive</div>
             <div id="apply-company-name" style="font-size:13px; color:var(--text-muted);">Sri Lakshmi Showroom</div>
@@ -405,6 +453,7 @@
   <!-- MODAL: Edit Profile & Skills -->
   <div id="profile-edit-modal" class="modal-overlay">
     <div class="modal-dialog">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <h3>Edit Profile & Skills</h3>
         <button class="modal-close-btn" data-close-modal>&times;</button>
@@ -439,7 +488,7 @@
           <div class="form-group">
             <label class="form-label">
               Skills (comma-separated)
-              <span class="help-text">e.g. billing, tally, customer service, ms excel, teaching, english</span>
+              <span class="help-text">e.g. billing, tally, customer service, ms excel, teaching</span>
             </label>
             <textarea id="profile-skills-input" class="form-textarea" rows="3" required></textarea>
           </div>
@@ -455,6 +504,7 @@
   <!-- MODAL: Resume Upload Simulator -->
   <div id="resume-upload-modal" class="modal-overlay">
     <div class="modal-dialog">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <h3>Upload or Paste Resume</h3>
         <button class="modal-close-btn" data-close-modal>&times;</button>
@@ -464,9 +514,9 @@
           Our smart city parser extracts relevant skills to instantly boost your job matches.
         </p>
 
-        <div style="border:2px dashed var(--border-card); border-radius:10px; padding:20px; text-align:center; background:#F8FAFC; margin-bottom:14px; position:relative;">
+        <div style="border:2px dashed var(--border-card); border-radius:12px; padding:20px; text-align:center; background:#F8FAFC; margin-bottom:14px; position:relative;">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary); margin-bottom:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <div style="font-size:14px; font-weight:600;">Choose resume file or drag & drop</div>
+          <div style="font-size:14px; font-weight:700;">Choose resume file or drag & drop</div>
           <div style="font-size:12px; color:var(--text-light); margin-top:2px;">Supports PDF, DOCX, TXT</div>
           <input type="file" id="resume-file-picker" accept=".pdf,.doc,.docx,.txt" style="margin-top:10px; font-size:13px; max-width:240px;">
         </div>
@@ -486,13 +536,14 @@
   <!-- MODAL: Submission Success Dialog -->
   <div id="submission-success-modal" class="modal-overlay">
     <div class="modal-dialog" style="max-width:440px; text-align:center;">
-      <div class="modal-body" style="padding:32px 24px;">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-body" style="padding:28px 20px;">
         <div style="width:56px; height:56px; border-radius:50%; background:var(--success-bg); color:var(--success-dark); font-size:28px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">✓</div>
-        <h3 style="font-size:20px; font-weight:700; color:var(--text-main); margin-bottom:6px;">Job Submitted for Review</h3>
+        <h3 style="font-size:20px; font-weight:800; color:var(--text-main); margin-bottom:6px;">Job Submitted for Review</h3>
         <p style="font-size:14px; color:var(--text-muted); line-height:1.5;">
           Your listing <strong id="submitted-job-name">Billing Executive</strong> has been routed to the city moderation queue.
         </p>
-        <p style="font-size:12px; color:var(--text-light); margin-top:10px;">
+        <p style="font-size:12px; color:var(--text-light); margin-top:8px;">
           Local admins check for compliance and valid contact information before publishing.
         </p>
         <div style="display:flex; flex-direction:column; gap:8px; margin-top:20px;">
@@ -503,6 +554,43 @@
             Back to Job Search
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Mobile Add to Home Screen Instructions (iOS / Android fallback) -->
+  <div id="install-guide-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-header">
+        <h3>Save LocalJobs to Your Mobile</h3>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center; margin-bottom:16px;">
+          <img src="icon-192.png" alt="LocalJobs App Icon" style="width:68px; height:68px; border-radius:16px; box-shadow:var(--shadow-md);">
+          <div style="font-weight:700; font-size:16px; margin-top:8px;">LocalJobs Mobile App</div>
+          <div style="font-size:12.5px; color:var(--text-muted);">Fast, full-screen city jobs portal</div>
+        </div>
+
+        <div style="background:#F8FAFC; border:1.5px solid var(--border-light); border-radius:12px; padding:14px; font-size:13.5px; line-height:1.6;">
+          <div style="font-weight:700; color:var(--primary); margin-bottom:4px;">📲 On iPhone / iPad (Safari):</div>
+          <ol style="padding-left:20px; color:var(--text-main);">
+            <li>Tap the <strong>Share</strong> button <span style="font-size:15px;">⎋</span> at the bottom of your Safari screen.</li>
+            <li>Scroll down and tap <strong>"Add to Home Screen"</strong> <span style="font-size:15px;">⊞</span>.</li>
+            <li>Tap <strong>Add</strong> in the top right corner. The LocalJobs icon will appear on your phone screen!</li>
+          </ol>
+
+          <div style="font-weight:700; color:var(--primary); margin-top:14px; margin-bottom:4px;">🤖 On Android (Chrome / Edge / Samsung):</div>
+          <ol style="padding-left:20px; color:var(--text-main);">
+            <li>Tap the <strong>three dots menu ⋮</strong> in the top right.</li>
+            <li>Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</li>
+            <li>Confirm, and the app icon is added to your home screen!</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="header-post-btn" style="width:100%; justify-content:center;" data-close-modal>Got it!</button>
       </div>
     </div>
   </div>
