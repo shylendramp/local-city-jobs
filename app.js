@@ -9,8 +9,23 @@ const STORAGE_KEYS = {
   JOBS: 'LOCAL_JOBS_DATA_V1',
   PROFILE: 'LOCAL_JOBS_PROFILE_V1',
   APPLICATIONS: 'LOCAL_JOBS_APPLICATIONS_V1',
-  SAVED: 'LOCAL_JOBS_SAVED_V1'
+  SAVED: 'LOCAL_JOBS_SAVED_V1',
+  CITY: 'LOCAL_JOBS_CITY_V1'
 };
+
+// Known City coordinates for offline / fallback proximity detection
+const KNOWN_CITIES = [
+  { name: 'Chennai', lat: 13.0827, lon: 80.2707 },
+  { name: 'Bengaluru', lat: 12.9716, lon: 77.5946 },
+  { name: 'Hyderabad', lat: 17.3850, lon: 78.4867 },
+  { name: 'Mumbai', lat: 19.0760, lon: 72.8777 },
+  { name: 'Delhi NCR', lat: 28.6139, lon: 77.2090 },
+  { name: 'Coimbatore', lat: 11.0168, lon: 76.9558 },
+  { name: 'Mysuru', lat: 12.2958, lon: 76.6394 },
+  { name: 'Kochi', lat: 9.9312, lon: 76.2673 },
+  { name: 'Pune', lat: 18.5204, lon: 73.8567 },
+  { name: 'Kolkata', lat: 22.5726, lon: 88.3639 }
+];
 
 // Business Categories metadata with icons & colors
 const BUSINESS_CATEGORIES = {
@@ -434,6 +449,7 @@ class LocalJobsApp {
     this.selectedType = 'all';
     this.sortBy = 'match';
     this.adminFilter = 'pending';
+    this.currentCity = '';
 
     this.init();
   }
@@ -442,10 +458,17 @@ class LocalJobsApp {
     this.loadFromStorage();
     this.bindEvents();
     this.render();
+    if (!this.currentCity) {
+      this.detectUserLocation(true);
+    } else {
+      this.updateCityDisplay(this.currentCity);
+    }
   }
 
   loadFromStorage() {
     try {
+      this.currentCity = localStorage.getItem(STORAGE_KEYS.CITY) || '';
+
       const storedJobs = localStorage.getItem(STORAGE_KEYS.JOBS);
       this.jobs = storedJobs ? JSON.parse(storedJobs) : [...SEED_JOBS];
       if (!storedJobs) {
@@ -705,6 +728,205 @@ class LocalJobsApp {
       if (pwaBanner) pwaBanner.style.display = 'none';
       localStorage.setItem('PWA_BANNER_DISMISSED', 'true');
     });
+
+    // City Location Pill & Modal Handlers
+    document.getElementById('btn-city-location')?.addEventListener('click', () => this.openCityModal());
+    document.getElementById('btn-detect-gps')?.addEventListener('click', () => this.detectUserLocation(false));
+
+    const saveManualCity = () => {
+      const input = document.getElementById('manual-city-input');
+      if (input && input.value.trim()) {
+        const val = input.value.trim();
+        this.setCurrentCity(val);
+        this.showToast(`City set to ${val}`, 'success');
+        document.getElementById('city-selector-modal')?.classList.remove('active');
+      }
+    };
+
+    document.getElementById('btn-save-manual-city')?.addEventListener('click', saveManualCity);
+    document.getElementById('manual-city-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveManualCity();
+      }
+    });
+
+    // Quick City Hub Chips
+    document.querySelectorAll('#quick-city-chips .type-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const city = chip.getAttribute('data-city');
+        this.setCurrentCity(city);
+        this.showToast(`City changed to ${city}`, 'success');
+        document.getElementById('city-selector-modal')?.classList.remove('active');
+      });
+    });
+  }
+
+  // Read mobile GPS location and reverse geocode
+  detectUserLocation(silent = false) {
+    const statusText = document.getElementById('gps-status-text');
+    if (statusText) statusText.textContent = 'Accessing GPS coordinates...';
+
+    if (!navigator.geolocation) {
+      this.updateCityDisplay(this.currentCity || 'Chennai');
+      if (!silent) this.showToast('Geolocation is not supported on this browser', 'warning');
+      return;
+    }
+
+    this.updateCityDisplay('Detecting...', true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        if (statusText) statusText.textContent = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. Resolving city...`;
+
+        try {
+          const detectedCity = await this.reverseGeocode(latitude, longitude);
+          this.setCurrentCity(detectedCity);
+          if (statusText) statusText.textContent = `✓ Located in ${detectedCity}`;
+          this.showToast(`Location detected: ${detectedCity}`, 'success');
+          document.getElementById('city-selector-modal')?.classList.remove('active');
+        } catch (err) {
+          console.warn('Reverse geocoding error:', err);
+          const fallback = this.getNearestCity(latitude, longitude);
+          this.setCurrentCity(fallback);
+          if (statusText) statusText.textContent = `✓ Located near ${fallback}`;
+          this.showToast(`Location set to ${fallback}`, 'success');
+        }
+      },
+      (err) => {
+        console.warn('Geolocation permission or device error:', err.message);
+        const fallback = this.currentCity || 'Chennai';
+        this.updateCityDisplay(fallback);
+        if (statusText) statusText.textContent = 'Could not access GPS. Please pick a city below.';
+        if (!silent) {
+          this.showToast('GPS access denied or unavailable. You can select your city manually.', 'warning');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
+  }
+
+  // Reverse geocode latitude & longitude to city / locality name
+  async reverseGeocode(lat, lon) {
+    // 1. Try BigDataCloud Client Reverse Geocode API (free, fast, HTTPS, CORS open)
+    try {
+      const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+      if (response.ok) {
+        const data = await response.json();
+        const city = data.city || data.locality || data.principalSubdivision;
+        const neighborhood = data.locality && data.city && data.locality !== data.city ? data.locality : '';
+        if (city) {
+          return neighborhood ? `${neighborhood}, ${city}` : city;
+        }
+      }
+    } catch (e) {
+      console.log('BigDataCloud error, trying OpenStreetMap:', e);
+    }
+
+    // 2. Try OpenStreetMap Nominatim
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`);
+      if (response.ok) {
+        const data = await response.json();
+        const addr = data.address || {};
+        const city = addr.city || addr.town || addr.village || addr.county || addr.state_district;
+        const suburb = addr.suburb || addr.neighbourhood || '';
+        if (city) {
+          return suburb ? `${suburb}, ${city}` : city;
+        }
+      }
+    } catch (e2) {
+      console.log('Nominatim error, trying distance fallback:', e2);
+    }
+
+    // 3. Fallback to nearest known city using Haversine formula
+    return this.getNearestCity(lat, lon);
+  }
+
+  // Haversine distance calculator for offline / fallback proximity detection
+  getNearestCity(lat, lon) {
+    let nearest = KNOWN_CITIES[0].name;
+    let minDistance = Infinity;
+
+    KNOWN_CITIES.forEach(c => {
+      const dLat = (c.lat - lat) * (Math.PI / 180);
+      const dLon = (c.lon - lon) * (Math.PI / 180);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat * (Math.PI / 180)) * Math.cos(c.lat * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const dist = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); // km
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearest = c.name;
+      }
+    });
+
+    return nearest;
+  }
+
+  // Set & persist active city
+  setCurrentCity(cityName) {
+    this.currentCity = cityName;
+    localStorage.setItem(STORAGE_KEYS.CITY, cityName);
+    this.updateCityDisplay(cityName);
+
+    // Update profile locality if available
+    if (this.profile) {
+      const baseCity = cityName.split(',')[0].trim();
+      this.profile.locality = baseCity;
+      this.saveProfile();
+      this.renderProfileCard();
+    }
+
+    // Update brand subtitle
+    const brandSub = document.getElementById('brand-subtitle');
+    if (brandSub) {
+      brandSub.textContent = `Jobs near you in ${cityName}`;
+    }
+
+    // Update results count
+    const countEl = document.getElementById('results-count');
+    if (countEl) {
+      countEl.textContent = `Showing local opportunities in ${cityName}`;
+    }
+
+    // Pre-fill Post a Job Area if matching
+    const postArea = document.getElementById('post-area');
+    if (postArea) {
+      for (let i = 0; i < postArea.options.length; i++) {
+        if (cityName.toLowerCase().includes(postArea.options[i].value.toLowerCase())) {
+          postArea.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }
+
+  // Update Header UI location pill
+  updateCityDisplay(cityName, isDetecting = false) {
+    const cityText = document.getElementById('header-city-name');
+    const dot = document.getElementById('location-dot');
+    if (cityText) {
+      cityText.textContent = cityName;
+    }
+    if (dot) {
+      dot.className = isDetecting ? 'location-pulse-dot detecting' : 'location-pulse-dot';
+    }
+  }
+
+  // Open City Selection Modal
+  openCityModal() {
+    const modal = document.getElementById('city-selector-modal');
+    if (modal) {
+      const input = document.getElementById('manual-city-input');
+      if (input) input.value = this.currentCity || '';
+      modal.classList.add('active');
+    }
   }
 
   // Switch between Find Jobs, Post a Job, Admin Review, and Saved Jobs

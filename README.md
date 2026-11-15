@@ -13,6 +13,23 @@ An interactive, responsive Progressive Web App (PWA) designed specifically for l
 
 ---
 
+## 📍 Mobile GPS Location & City Detection
+
+The application dynamically detects the user's mobile device location and displays the local city name accordingly:
+
+1. **Automatic Device Geolocation (`navigator.geolocation`):**
+   - Automatically detects current GPS coordinates upon permission.
+   - Reverse-geocodes coordinates into city and neighborhood (e.g. `Anna Nagar, Chennai`, `Bengaluru`, `Mumbai`, etc.) using high-speed client-side reverse geocoding with OpenStreetMap & proximity calculation fallback.
+2. **Interactive Location Pill in Header:**
+   - Displays real-time city badge with an animated status dot (`🟢 Active GPS` / `🟡 Detecting`).
+   - Tapping the city pill allows instant re-detection or manual switching to popular city hubs (Chennai, Bengaluru, Hyderabad, Mumbai, Delhi NCR, Coimbatore, Mysuru, Kochi, Pune, Kolkata) or entering any custom city.
+3. **Dynamic Portal Personalization:**
+   - Automatically personalizes search header: *"Jobs near you in [City Name]"*.
+   - Updates candidate profile locality and pre-fills employer job posting fields.
+   - Remembers the user's city in `localStorage` across browsing sessions.
+
+---
+
 ## 📱 Mobile App & PWA Features ("Save as App Icon")
 
 LocalJobs is configured as a full **Progressive Web App (PWA)**, meaning you can install it directly onto your phone's home screen with its own custom app icon and launch it full-screen without any app store downloads:
@@ -46,35 +63,9 @@ LocalJobs is configured as a full **Progressive Web App (PWA)**, meaning you can
 
 ### On Android (Chrome / Edge / Samsung Internet)
 1. Open the website link.
-2. You will see a **"Save Icon"** banner at the top, or tap the **Install** button in the bottom navigation bar.
+2. You will see a **"Save Icon"** banner at the top, or tap the **Install** tab in the bottom bar.
 3. Alternatively, tap the browser's three dots menu (⋮) → **"Install app"** or **"Add to Home screen"**.
 4. Confirm to install. The app icon will be added to your home screen and app drawer.
-
----
-
-## 🌟 Key Interactive Features
-
-### 1. Job Seeker Experience (`Find jobs`)
-- **Instant Skill-Match Engine:** Dynamically calculates match percentage (e.g. `92% match`, `78% match`) based on user profile skills vs job requirements.
-- **Dynamic Category Filtering:** One-click horizontal pills to switch between all local business categories with custom icons.
-- **Area / Locality & Type Filters:** Filter by neighborhood wards (Anna Nagar, T. Nagar, Velachery, etc.) and job type (Full Time, Part Time, Walk-in Interviews).
-- **Interactive Job Application:** Pre-filled application modal with candidate contact details and customizable message; records applications directly into local state.
-- **Direct Local Contact Actions:** One-click direct phone dial (`tel:`) and WhatsApp chat (`wa.me`) with local employer contacts.
-- **Bookmarks & Saved Jobs:** Save positions with immediate persistent storage.
-- **Profile & Resume Simulator:** Edit profile skills or paste resume text to automatically detect keywords and recalculate city-wide match scores in real time.
-
-### 2. Employer Job Posting Flow (`Post a job`)
-- **Tailored for Local Establishments:** Easy form capturing business name, local business sector, locality, salary, and walk-in interview timings.
-- **Live Card Preview:** Real-time visual card preview as the employer types.
-- **Automated Red-Flag & Fraud Scanner:** Scans listing text in real-time for fee requests, security deposits, or suspicious phrases to protect job seekers.
-- **Admin Review Routing:** Submissions are assigned `pending` status and routed immediately to the Admin Review queue.
-
-### 3. City Admin Review & Moderation (`Admin review`)
-- **Moderation Dashboard:** Real-time stat counters for Pending, Live/Approved, Rejected, and Candidate Applications.
-- **Safety Audit Badges:** Instant visual indicator of clean listings vs flagged fee scams.
-- **One-Click Actions:** Approve (instantly makes job live in search feed), Reject, or Feature high-priority local jobs.
-- **Candidate Applications Tracker:** Review candidates who applied, inspect match scores, and update hiring statuses (`Under Review`, `Shortlisted`, `Hired`).
-- **Data Reset:** One-click button to restore pristine demo data anytime.
 
 ---
 
@@ -94,9 +85,9 @@ Then navigate to `http://localhost:3000`.
 
 ## 📁 File Structure
 
-- `index.html`: Semantic HTML5 with PWA tags, mobile bottom navigation, and native bottom sheet modals.
-- `styles.css`: Modern mobile-first CSS with 48px touch targets, custom SVG dropdown chevron arrows, glowing focus rings, and safe area insets.
-- `app.js`: Reactive state manager, dynamic match calculation, PWA install handlers, and offline storage.
+- `index.html`: Semantic HTML5 with location pill, city selector modal, PWA tags, mobile navigation, and bottom sheets.
+- `styles.css`: Modern mobile-first CSS with pulse GPS indicators, 48px touch targets, custom dropdown chevrons, and safe area insets.
+- `app.js`: Reactive state manager, mobile GPS geolocation & reverse geocoder, match calculation, and offline persistence.
 - `manifest.json`: Web App Manifest defining standalone mobile display, app icons, and theme color.
 - `sw.js`: Service worker caching assets for fast loading and offline support.
 - `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `icon.svg`: High-resolution icons for Android, iOS, and desktop home screens.
